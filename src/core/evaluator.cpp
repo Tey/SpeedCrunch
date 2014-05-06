@@ -392,7 +392,7 @@ Tokens Evaluator::scan(const QString& expr, Evaluator::AutoFixPolicy policy) con
 
     // Parsing state.
     enum { Start, Finish, Bad, InNumber, InHexa, InOctal, InBinary, InDecimal, InExpIndicator,
-           InExponent, InIdentifier } state;
+           InExponent, InIdentifier, InHexaFrac, InOctalFrac, InBinaryFrac } state;
 
     // Initialize variables.
     state = Start;
@@ -526,6 +526,20 @@ Tokens Evaluator::scan(const QString& expr, Evaluator::AutoFixPolicy policy) con
         case InHexa:
             if (ch.isDigit() || (ch >= 'A' && ch < 'G') || (ch >= 'a' && ch < 'g'))
                 tokenText.append(ex.at(i++).toUpper());
+            else if (ch == '.' || ch == ',') {
+                tokenText.append('.');
+                ++i;
+                state = InHexaFrac;
+            } else { // We're done with hexadecimal number.
+                tokens.append(Token(Token::stxNumber, tokenText, tokenStart));
+                tokenText = "";
+                state = Start;
+            }
+            break;
+
+        case InHexaFrac:    // Parse the fractional part
+            if (ch.isDigit() || (ch >= 'A' && ch < 'G') || (ch >= 'a' && ch < 'g'))
+                tokenText.append(ex.at(i++).toUpper());
             else { // We're done with hexadecimal number.
                 tokens.append(Token(Token::stxNumber, tokenText, tokenStart));
                 tokenText = "";
@@ -536,6 +550,20 @@ Tokens Evaluator::scan(const QString& expr, Evaluator::AutoFixPolicy policy) con
         case InBinary:
             if (ch == '0' || ch == '1')
                 tokenText.append(ex.at(i++));
+            else if (ch == '.' || ch == ',') {
+                tokenText.append('.');
+                ++i;
+                state = InBinaryFrac;
+            } else { // We're done with binary number.
+                tokens.append(Token(Token::stxNumber, tokenText, tokenStart));
+                tokenText = "";
+                state = Start;
+            }
+            break;
+
+        case InBinaryFrac:  // Parse the fractional part
+            if (ch == '0' || ch == '1')
+                tokenText.append(ex.at(i++));
             else { // We're done with binary number.
                 tokens.append(Token(Token::stxNumber, tokenText, tokenStart));
                 tokenText = "";
@@ -544,6 +572,19 @@ Tokens Evaluator::scan(const QString& expr, Evaluator::AutoFixPolicy policy) con
             break;
 
         case InOctal:
+            if (ch >= '0' && ch < '8')
+                tokenText.append(ex.at(i++));
+            else if (ch == '.' || ch == ',') {
+                tokenText.append('.');
+                ++i;
+                state = InOctalFrac;
+            } else { // We're done with octal number.
+                tokens.append(Token(Token::stxNumber, tokenText, tokenStart));
+                tokenText = ""; state = Start;
+            }
+            break;
+
+        case InOctalFrac:   // Parse the fractional part
             if (ch >= '0' && ch < '8')
                 tokenText.append(ex.at(i++));
             else { // We're done with octal number.
