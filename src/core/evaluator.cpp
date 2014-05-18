@@ -24,11 +24,10 @@
 #include <QCoreApplication>
 #include <QStack>
 
-#define EVALUATOR_DEBUG
+//#define EVALUATOR_DEBUG
 #ifdef EVALUATOR_DEBUG
 #include <QFile>
 #include <QTextStream>
-#include <QDebug>
 
 QTextStream& operator<<(QTextStream& s, HNumber num)
 {
@@ -1317,13 +1316,11 @@ HNumber Evaluator::exec(const QVector<Opcode>& opcodes, const QVector<HNumber>& 
                     break;
 
                 fname = refs.take(stack.count() - index);
-                //qDebug() << "Looking for " << fname << " ... " << m_assignFunc;
                 function = FunctionRepo::instance()->find(fname);
 
                 userFunction = NULL;
                 if (!function) {
                     // Check if this is a valid user function call.
-                    //qDebug() << m_userFunctions;
                     userFunction = getUserFunction(fname);
                 }   
 
@@ -1496,7 +1493,6 @@ HNumber Evaluator::eval()
             userFunction->opcodes = m_codes;
 
             m_userFunctions.insert(m_assignId, userFunction);
-            //qDebug() << "Inserted function " << m_assignId;
         } else {
             if(hasUserFunction(m_assignId)) {
                 m_error = tr("%1 is a user function name, please choose another or delete the function").arg(m_assignId);
