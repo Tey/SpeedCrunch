@@ -144,9 +144,9 @@ private slots:
     void setStatusBarVisible(bool);
     void setSyntaxHighlightingEnabled(bool);
     void setDigitGrouping(QAction*);
+    void setDigitGroupingSep(QAction*);
     void setAutoResultToClipboardEnabled(bool);
     void setParseAllRadixChar(bool);
-    void setStrictDigitGrouping(bool);
     void setSystemTrayIconEnabled(bool);
     void setVariableSaveEnabled(bool);
     void setUserFunctionSaveEnabled(bool b);
@@ -199,6 +199,7 @@ private:
     void checkInitialResultPrecision();
     void checkInitialLanguage();
     void checkInitialDigitGrouping();
+    void checkInitialDigitGroupingSep();
     void restoreHistory();
     void restoreVariables();
     void restoreUserFunctions();
@@ -282,7 +283,10 @@ private:
         QAction* settingsBehaviorMinimizeToTray;
         QAction* settingsBehaviorAutoResultToClipboard;
         QAction* settingsBehaviorParseAllRadixChar;
-        QAction* settingsBehaviorStrictDigitGrouping;
+        QAction* settingsBehaviorDigitGroupingSepNone;
+        QAction* settingsBehaviorDigitGroupingSepSpace;
+        QAction* settingsBehaviorDigitGroupingSepAllKnown;
+        QAction* settingsBehaviorDigitGroupingSepAllUnknown;
         QAction* settingsDisplayZoomIn;
         QAction* settingsDisplayZoomOut;
         QAction* settingsDisplayFont;
@@ -309,6 +313,7 @@ private:
         QActionGroup* resultFormat;
         QActionGroup* radixChar;
         QActionGroup* digitGrouping;
+        QActionGroup* digitGroupingSep;
     } m_actionGroups;
 
     struct {
@@ -317,6 +322,7 @@ private:
         QMenu* colorScheme;
         QMenu* decimal;
         QMenu* digitGrouping;
+        QMenu* digitGroupingSep;
         QMenu* display;
         QMenu* edit;
         QMenu* resultFormat;

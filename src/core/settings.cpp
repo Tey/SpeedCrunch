@@ -90,7 +90,9 @@ void Settings::load()
     autoResultToClipboard = settings->value(key + QLatin1String("AutoResultToClipboard"), false).toBool();
     windowPositionSave = settings->value(key + QLatin1String("WindowPositionSave"), true).toBool();
     parseAllRadixChar = settings->value(key + QLatin1String("ParseAllRadixChar"), true).toBool();
-    strictDigitGrouping = settings->value(key + QLatin1String("StrictDigitGrouping"), true).toBool();
+
+    digitGroupingSeparator = (DigitGroupSep) settings->value(key + QLatin1String("DigitGroupingSeparator"), Space).toInt();
+    digitGrouping = (DigitGroupSep) std::min(AllUnknown, std::max(None, digitGroupingSeparator));
 
     digitGrouping = settings->value(key + QLatin1String("DigitGrouping"), 0).toInt();
     digitGrouping = std::min(3, std::max(0, digitGrouping));
@@ -238,7 +240,7 @@ void Settings::save()
     settings->setValue(key + QLatin1String("Language"), language);
     settings->setValue(key + QLatin1String("WindowPositionSave"), windowPositionSave);
     settings->setValue(key + QLatin1String("ParseAllRadixChar"), parseAllRadixChar);
-    settings->setValue(key + QLatin1String("StrictDigitGrouping"), strictDigitGrouping);
+    settings->setValue(key + QLatin1String("DigitGroupingSeparator"), digitGroupingSeparator);
 
     settings->setValue(key + QLatin1String("AngleMode"), QString(QChar(angleUnit)));
 

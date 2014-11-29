@@ -28,6 +28,8 @@
 
 class Settings {
 public:
+    enum DigitGroupSep { None = 0, Space = 1, AllKnown = 2, AllUnknown = 3};
+
     static Settings* instance();
 
     void load();
@@ -38,7 +40,7 @@ public:
     bool isRadixCharacterAuto() const;
 
     bool parseAllRadixChar;
-    bool strictDigitGrouping;
+    DigitGroupSep digitGroupingSeparator;
 
     char angleUnit; // 'r': radian; 'd': degree.
 

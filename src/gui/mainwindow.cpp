@@ -79,6 +79,9 @@
 #include "Windows.h"
 #endif // Q_OS_WIN32
 
+// "None" might be defined in <X11/X.h>.
+#undef None
+
 QTranslator* MainWindow::createTranslator(const QString& langCode)
 {
     QTranslator* translator = new QTranslator;
@@ -152,7 +155,10 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorDigitGroupingThreeSpaces = new QAction(this);
     m_actions.settingsBehaviorAutoResultToClipboard = new QAction(this);
     m_actions.settingsBehaviorParseAllRadixChar = new QAction(this);
-    m_actions.settingsBehaviorStrictDigitGrouping = new QAction(this);
+    m_actions.settingsBehaviorDigitGroupingSepNone = new QAction(this);
+    m_actions.settingsBehaviorDigitGroupingSepSpace = new QAction(this);
+    m_actions.settingsBehaviorDigitGroupingSepAllKnown = new QAction(this);
+    m_actions.settingsBehaviorDigitGroupingSepAllUnknown = new QAction(this);
     m_actions.settingsDisplayColorSchemeStandard = new QAction(this);
     m_actions.settingsDisplayColorSchemeSublime = new QAction(this);
     m_actions.settingsDisplayColorSchemeTerminal = new QAction(this);
@@ -204,7 +210,14 @@ void MainWindow::createActions()
     m_actions.settingsBehaviorDigitGroupingThreeSpaces->setData(3);
     m_actions.settingsBehaviorAutoResultToClipboard->setCheckable(true);
     m_actions.settingsBehaviorParseAllRadixChar->setCheckable(true);
-    m_actions.settingsBehaviorStrictDigitGrouping->setCheckable(true);
+    m_actions.settingsBehaviorDigitGroupingSepNone->setCheckable(true);
+    m_actions.settingsBehaviorDigitGroupingSepNone->setData(Settings::None);
+    m_actions.settingsBehaviorDigitGroupingSepSpace->setCheckable(true);
+    m_actions.settingsBehaviorDigitGroupingSepSpace->setData(Settings::Space);
+    m_actions.settingsBehaviorDigitGroupingSepAllKnown->setCheckable(true);
+    m_actions.settingsBehaviorDigitGroupingSepAllKnown->setData(Settings::AllKnown);
+    m_actions.settingsBehaviorDigitGroupingSepAllUnknown->setCheckable(true);
+    m_actions.settingsBehaviorDigitGroupingSepAllUnknown->setData(Settings::AllUnknown);
     m_actions.settingsDisplayColorSchemeStandard->setCheckable(true);
     m_actions.settingsDisplayColorSchemeSublime->setCheckable(true);
     m_actions.settingsDisplayColorSchemeTerminal->setCheckable(true);
@@ -353,7 +366,10 @@ void MainWindow::setActionsText()
     m_actions.settingsBehaviorLeaveLastExpression->setText(MainWindow::tr("Leave &Last Expression"));
     m_actions.settingsBehaviorAutoResultToClipboard->setText(MainWindow::tr("Automatic &Result to Clipboard"));
     m_actions.settingsBehaviorParseAllRadixChar->setText(MainWindow::tr("Detect &All Radix Characters"));
-    m_actions.settingsBehaviorStrictDigitGrouping->setText(MainWindow::tr("&Strict Digit Groups Detection"));
+    m_actions.settingsBehaviorDigitGroupingSepNone->setText(MainWindow::tr("None"));
+    m_actions.settingsBehaviorDigitGroupingSepSpace->setText(MainWindow::tr("Spaces Only"));
+    m_actions.settingsBehaviorDigitGroupingSepAllKnown->setText(MainWindow::tr("Known Separators"));
+    m_actions.settingsBehaviorDigitGroupingSepAllUnknown->setText(MainWindow::tr("All Extra Characters"));
     m_actions.settingsRadixCharComma->setText(MainWindow::tr("&Comma"));
     m_actions.settingsRadixCharDefault->setText(MainWindow::tr("&System Default"));
     m_actions.settingsRadixCharDot->setText(MainWindow::tr("&Dot"));
@@ -422,6 +438,12 @@ void MainWindow::createActionGroups()
     m_actionGroups.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingOneSpace);
     m_actionGroups.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingTwoSpaces);
     m_actionGroups.digitGrouping->addAction(m_actions.settingsBehaviorDigitGroupingThreeSpaces);
+
+    m_actionGroups.digitGroupingSep = new QActionGroup(this);
+    m_actionGroups.digitGroupingSep->addAction(m_actions.settingsBehaviorDigitGroupingSepNone);
+    m_actionGroups.digitGroupingSep->addAction(m_actions.settingsBehaviorDigitGroupingSepSpace);
+    m_actionGroups.digitGroupingSep->addAction(m_actions.settingsBehaviorDigitGroupingSepAllKnown);
+    m_actionGroups.digitGroupingSep->addAction(m_actions.settingsBehaviorDigitGroupingSepAllUnknown);
 }
 
 void MainWindow::createActionShortcuts()
@@ -559,7 +581,13 @@ void MainWindow::createMenus()
 
     m_menus.behavior->addAction(m_actions.settingsBehaviorLeaveLastExpression);
     m_menus.behavior->addAction(m_actions.settingsBehaviorParseAllRadixChar);
-    m_menus.behavior->addAction(m_actions.settingsBehaviorStrictDigitGrouping);
+
+    m_menus.digitGroupingSep = m_menus.behavior->addMenu("");
+    m_menus.digitGroupingSep->addAction(m_actions.settingsBehaviorDigitGroupingSepNone);
+    m_menus.digitGroupingSep->addAction(m_actions.settingsBehaviorDigitGroupingSepSpace);
+    m_menus.digitGroupingSep->addAction(m_actions.settingsBehaviorDigitGroupingSepAllKnown);
+    m_menus.digitGroupingSep->addAction(m_actions.settingsBehaviorDigitGroupingSepAllUnknown);
+
     m_menus.behavior->addSeparator();
     m_menus.behavior->addAction(m_actions.settingsBehaviorAlwaysOnTop);
     m_menus.behavior->addAction(m_actions.settingsBehaviorMinimizeToTray);
@@ -605,6 +633,7 @@ void MainWindow::setMenusText()
     m_menus.colorScheme->setTitle(MainWindow::tr("Color Scheme"));
     m_menus.help->setTitle(MainWindow::tr("&Help"));
     m_menus.digitGrouping->setTitle(MainWindow::tr("Digit Grouping"));
+    m_menus.digitGroupingSep->setTitle(MainWindow::tr("Ignored Extra Characters"));
 }
 
 void MainWindow::createStatusBar()
@@ -909,7 +938,7 @@ void MainWindow::createFixedConnections()
     connect(m_actions.settingsBehaviorLeaveLastExpression, SIGNAL(toggled(bool)), SLOT(setLeaveLastExpressionEnabled(bool)));
     connect(m_actions.settingsBehaviorAutoResultToClipboard, SIGNAL(toggled(bool)), SLOT(setAutoResultToClipboardEnabled(bool)));
     connect(m_actions.settingsBehaviorParseAllRadixChar, SIGNAL(toggled(bool)), SLOT(setParseAllRadixChar(bool)));
-    connect(m_actions.settingsBehaviorStrictDigitGrouping, SIGNAL(toggled(bool)), SLOT(setStrictDigitGrouping(bool)));
+    connect(m_actionGroups.digitGroupingSep, SIGNAL(triggered(QAction*)), SLOT(setDigitGroupingSep(QAction*)));
 
     connect(m_actions.settingsRadixCharComma, SIGNAL(triggered()), SLOT(setRadixCharacterComma()));
     connect(m_actions.settingsRadixCharDefault, SIGNAL(triggered()), SLOT(setRadixCharacterAutomatic()));
@@ -1070,7 +1099,7 @@ void MainWindow::applySettings()
         setAutoResultToClipboardEnabled(false);
 
     m_actions.settingsBehaviorParseAllRadixChar->setChecked(m_settings->parseAllRadixChar);
-    m_actions.settingsBehaviorStrictDigitGrouping->setChecked(m_settings->strictDigitGrouping);
+    checkInitialDigitGroupingSep();
 
     QFont font;
     font.fromString(m_settings->displayFont);
@@ -1150,6 +1179,17 @@ void MainWindow::checkInitialDigitGrouping()
         case 3: m_actions.settingsBehaviorDigitGroupingThreeSpaces->setChecked(true); break;
         default:
         case 0: m_actions.settingsBehaviorDigitGroupingNone->setChecked(true); break;
+    }
+}
+
+void MainWindow::checkInitialDigitGroupingSep()
+{
+    switch (m_settings->digitGroupingSeparator) {
+        case Settings::None: m_actions.settingsBehaviorDigitGroupingSepNone->setChecked(true); break;
+        case Settings::AllKnown: m_actions.settingsBehaviorDigitGroupingSepAllKnown->setChecked(true); break;
+        case Settings::AllUnknown: m_actions.settingsBehaviorDigitGroupingSepAllUnknown->setChecked(true); break;
+        default:
+        case Settings::Space: m_actions.settingsBehaviorDigitGroupingSepSpace->setChecked(true); break;
     }
 }
 
@@ -1726,9 +1766,9 @@ void MainWindow::setParseAllRadixChar(bool b)
     emit radixCharacterChanged();
 }
 
-void MainWindow::setStrictDigitGrouping(bool b)
+void MainWindow::setDigitGroupingSep(QAction *action)
 {
-    m_settings->strictDigitGrouping = b;
+    m_settings->digitGroupingSeparator = (Settings::DigitGroupSep) action->data().toInt();
     emit radixCharacterChanged();   // FIXME?
 }
 

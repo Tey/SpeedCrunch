@@ -352,10 +352,13 @@ bool Evaluator::isSeparatorChar(const QChar &ch)
     if (isRadixChar(ch))
         return false;
 
-    if (Settings::instance()->strictDigitGrouping)
-        return s_separatorStrictRE.exactMatch(ch);
-    else
-        return s_separatorRE.exactMatch(ch);
+    switch (Settings::instance()->digitGroupingSeparator) {
+        case Settings::AllKnown: return s_separatorStrictRE.exactMatch(ch);
+        case Settings::AllUnknown: return s_separatorRE.exactMatch(ch);
+        case Settings::None: return false;
+        default:
+        case Settings::Space: return (ch == ' ' || ch == '\t');
+    }
 }
 
 Evaluator* Evaluator::instance()
