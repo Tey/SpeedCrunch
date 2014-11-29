@@ -1554,7 +1554,7 @@ HNumber Evaluator::eval()
             userFunction->identifiers = m_identifiers;
             userFunction->opcodes = m_codes;
 
-            m_userFunctions.insert(m_assignId, userFunction);
+            m_userFunctions.insert(m_assignId.toLower(), userFunction);
         } else {
             if(hasUserFunction(m_assignId)) {
                 m_error = tr("%1 is a user function name, please choose another or delete the function").arg(m_assignId);
@@ -1671,7 +1671,7 @@ void Evaluator::setUserFunction(const UserFunctionDescr& descr)
 
 void Evaluator::unsetUserFunction(const QString& fname)
 {
-    UserFunction *function = m_userFunctions.take(fname);
+    UserFunction *function = m_userFunctions.take(fname.toLower());
     if (function) delete function;
     // FIXME: would "m_userFunctions.remove(fname);" be enough ?
 }
@@ -1685,13 +1685,13 @@ void Evaluator::unsetAllUserFunctions()
 
 bool Evaluator::hasUserFunction(const QString& fname)
 {
-    return fname.isEmpty() ? false : m_userFunctions.contains(fname);
+    return fname.isEmpty() ? false : m_userFunctions.contains(fname.toLower());
 }
 
 Evaluator::UserFunction* Evaluator::getUserFunction(const QString& fname) const
 {
     // TODO: handle the fname.isEmpty() case ?
-    return m_userFunctions.value(fname);
+    return m_userFunctions.value(fname.toLower());
 }
 
 QString Evaluator::autoFix(const QString& expr)
