@@ -1769,7 +1769,8 @@ void MainWindow::setParseAllRadixChar(bool b)
 void MainWindow::setDigitGroupingSep(QAction *action)
 {
     m_settings->digitGroupingSeparator = (Settings::DigitGroupSep) action->data().toInt();
-    emit radixCharacterChanged();   // FIXME?
+    emit radixCharacterChanged();
+    // TODO: use a different signal, as the current expression should be evaluated again.
 }
 
 void MainWindow::setAngleModeRadian()

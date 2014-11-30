@@ -1524,47 +1524,49 @@ HNumber Evaluator::eval()
 {
     HNumber result = evalNoAssign(); // This sets m_assignId.
 
-    if (isBuiltInVariable(m_assignId)) {
-        m_error = tr("%1 is a reserved name, please choose another").arg(m_assignId);
-        return HMath::nan();
-    }
+    if (m_error.isEmpty()) {
+        if (isBuiltInVariable(m_assignId)) {
+            m_error = tr("%1 is a reserved name, please choose another").arg(m_assignId);
+            return HMath::nan();
+        }
 
-    // Handle user variable or function assignment.
-    if (!m_assignId.isEmpty()) {
-        if (m_assignFunc) {
-            if(hasVariable(m_assignId)) {
-                m_error = tr("%1 is a variable name, please choose another or delete the variable").arg(m_assignId);
-                return HMath::nan();
-            }
-
-            // Check that each arguments are unique and not a reserved identifier.
-            for (int i = 0; i < m_assignArg.count() - 1; ++i) {
-                const QString &argName = m_assignArg.at(i);
-
-                if (m_assignArg.indexOf(argName, i + 1) != -1) {
-                    m_error = tr("argument %1 is used more than once").arg(argName);
+        // Handle user variable or function assignment.
+        if (!m_assignId.isEmpty()) {
+            if (m_assignFunc) {
+                if(hasVariable(m_assignId)) {
+                    m_error = tr("%1 is a variable name, please choose another or delete the variable").arg(m_assignId);
                     return HMath::nan();
                 }
 
-                if (isBuiltInVariable(argName)) {
-                    m_error = tr("%1 is a reserved name, please choose another").arg(argName);
+                // Check that each arguments are unique and not a reserved identifier.
+                for (int i = 0; i < m_assignArg.count() - 1; ++i) {
+                    const QString &argName = m_assignArg.at(i);
+
+                    if (m_assignArg.indexOf(argName, i + 1) != -1) {
+                        m_error = tr("argument %1 is used more than once").arg(argName);
+                        return HMath::nan();
+                    }
+
+                    if (isBuiltInVariable(argName)) {
+                        m_error = tr("%1 is a reserved name, please choose another").arg(argName);
+                        return HMath::nan();
+                    }
+                }
+
+                UserFunction* userFunction = new UserFunction(m_assignId, m_assignArg, m_expression.section("=", 1, 1).trimmed());
+                userFunction->constants = m_constants;
+                userFunction->identifiers = m_identifiers;
+                userFunction->opcodes = m_codes;
+
+                m_userFunctions.insert(m_assignId.toLower(), userFunction);
+            } else {
+                if(hasUserFunction(m_assignId)) {
+                    m_error = tr("%1 is a user function name, please choose another or delete the function").arg(m_assignId);
                     return HMath::nan();
                 }
+
+                setVariable(m_assignId, result);
             }
-
-            UserFunction* userFunction = new UserFunction(m_assignId, m_assignArg, m_expression.section("=", 1, 1).trimmed());
-            userFunction->constants = m_constants;
-            userFunction->identifiers = m_identifiers;
-            userFunction->opcodes = m_codes;
-
-            m_userFunctions.insert(m_assignId.toLower(), userFunction);
-        } else {
-            if(hasUserFunction(m_assignId)) {
-                m_error = tr("%1 is a user function name, please choose another or delete the function").arg(m_assignId);
-                return HMath::nan();
-            }
-
-            setVariable(m_assignId, result);
         }
     }
 
